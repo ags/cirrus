@@ -1,0 +1,34 @@
+vpc: vpc-183bcd7c
+
+instanceType: t2.micro
+
+ami: ami-0d4cfd66
+
+capacity:
+  min: 2
+  max: 3
+
+healthCheck:
+  target: "http:80/"
+  timeout: 2
+  interval: 10
+  healthyThreshold: 3
+  unhealthyThreshold: 5
+
+listeners:
+  - port: 80
+    protocol: "HTTP"
+
+userData: |
+  yum update -y
+  yum install -y docker
+  service docker start
+  docker run -d -p 80:80 tutum/hello-world
+
+subnets:
+  loadBalancer:
+    - subnet-53b3596e
+    - subnet-13e6b44a
+  instance:
+    - subnet-53b3596e
+    - subnet-13e6b44a
