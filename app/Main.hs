@@ -5,6 +5,7 @@ module Main where
 import Cirrus
 
 import Control.Monad (join)
+import Data.Text (pack)
 import Options.Applicative
 
 import qualified Data.ByteString as BS
@@ -14,16 +15,20 @@ main :: IO ()
 main = join $ execParser (info commands idm)
 
 commands :: Parser (IO ())
-commands = subparser (command "parse" parseCmd)
-  where parseCmd = info (parseConfig <$> argument str idm) idm
+commands = subparser
+  ( command "parse" (info (parseCmd <$> argument str idm) idm)
+ <> command "deploy" (info (deployCmd <$> argument str idm <*> argument str idm) idm)
+  )
 
-parseConfig :: String -> IO ()
-parseConfig f = do
+parseCmd :: FilePath -> IO ()
+parseCmd f = do
   yml <- BS.readFile f
+  either (fail . show) (LBS.putStr . encode) (decodeTemplate yml)
 
-  case decode yml of
-    Right stack -> printTemplate $ fromConfig stack
-    Left err    -> fail $ show err
+deployCmd :: String -> FilePath -> IO ()
+deployCmd n f = do
+  yml <- BS.readFile f
+  either (fail . show) (runDeploy (pack n)) (decodeTemplate yml)
 
-printTemplate :: Template -> IO ()
-printTemplate = LBS.putStr . encode
+decodeTemplate :: BS.ByteString -> Either String Template
+decodeTemplate yml = fmap fromConfig (decode yml)

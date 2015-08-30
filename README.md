@@ -14,6 +14,13 @@ not be considered for serious production use yet.
 
 Outputs a CloudFormation template for the given configuration file to stdout.
 
+### deploy
+
+`cirrus deploy <stack-name> <config-file>`
+
+Creates or updates a CloudFormation stack with the given name using the given
+configuration file.
+
 ## Example Configuration
 
 ```yaml
