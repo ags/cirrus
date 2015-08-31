@@ -34,7 +34,7 @@ import Network.AWS.Data (FromText, fromText, toText)
 
 import qualified Data.Aeson as AE (withText)
 import qualified Data.Text as T (lines)
-import qualified Data.Vector as V (fromList, null)
+import qualified Data.Vector as V (fromList)
 import qualified Network.AWS.EC2.Types as EC2
 
 -- FromConfig
@@ -388,21 +388,16 @@ data Template = Template { tAutoScalingGroup :: AutoScalingGroup
                          , tSecurityGroup :: SecurityGroup
                          } deriving (Eq, Show)
 
-omitNulls :: [(Text, Value)] -> Value
-omitNulls = object . filter notNull
-  where notNull (_, Null)    = False
-        notNull (_, Array a) = (not . V.null) a
-        notNull _            = True
-
 instance ToJSON Template where
-  toJSON t = object [ "AWSTemplateFormatVersion" .= String "2010-09-09"
-                    , "Resources" .= rs
-                    ]
-    where rs = omitNulls [ "autoScalingGroup" .= tAutoScalingGroup t
-                         , "elasticLoadBalancer" .= tELB t
-                         , "launchConfiguration" .= tLaunchConfiguration t
-                         , "securityGroup" .= tSecurityGroup t
-                         ]
+  toJSON t = object
+    [ "AWSTemplateFormatVersion" .= String "2010-09-09"
+    , "Resources" .= object
+      [ "autoScalingGroup" .= tAutoScalingGroup t
+      , "elasticLoadBalancer" .= tELB t
+      , "launchConfiguration" .= tLaunchConfiguration t
+      , "securityGroup" .= tSecurityGroup t
+      ]
+    ]
 
 instance FromConfig Template where
   fromConfig c = Template { tAutoScalingGroup = fromConfig c
