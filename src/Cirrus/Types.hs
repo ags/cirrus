@@ -50,7 +50,7 @@ data Config = Config { cfgVPC :: VPC
                      , cfgCapacity :: Capacity
                      , cfgListeners :: [Listener]
                      , cfgHealthCheck :: HealthCheck
-                     , cfgUserData :: Maybe UserData
+                     , cfgUserData :: UserData
                      , cfgLoadBalancerSubnets :: [Subnet]
                      , cfgInstanceSubnets :: [Subnet]
                      } deriving (Eq, Show)
@@ -63,7 +63,7 @@ instance FromJSON Config where
            <*> o .:? "capacity" .!= defaultCapacity
            <*> o .:  "listeners"
            <*> o .:  "healthCheck"
-           <*> o .:? "userData"
+           <*> o .:  "userData"
            <*> ((o .:  "subnets") >>= (.: "loadBalancer"))
            <*> ((o .:  "subnets") >>= (.: "instance"))
   parseJSON _ = mzero
@@ -360,7 +360,7 @@ instance FromConfig ElasticLoadBalancer where
 
 data LaunchConfiguration = LaunchConfiguration { lcAMI :: AMI
                                                , lcInstanceType :: InstanceType
-                                               , lcUserData :: Maybe UserData
+                                               , lcUserData :: UserData
                                                } deriving (Eq, Show)
 
 instance ToJSON LaunchConfiguration where
