@@ -19,6 +19,7 @@ module Cirrus.Types
   , Protocol(..)
   , Ref(..)
   , SecurityGroup(..)
+  , Stack(..)
   , Subnet(..)
   , Tag(..)
   , Template(..)
@@ -405,3 +406,9 @@ instance FromConfig Template where
                           , tLaunchConfiguration = fromConfig c
                           , tSecurityGroup = fromConfig c
                           }
+
+-- Stack
+
+data Stack = Stack { stackName :: Text
+                   , stackTemplate :: Template
+                   } deriving (Eq, Show)

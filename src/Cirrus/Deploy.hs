@@ -3,7 +3,6 @@
 module Cirrus.Deploy (runDeploy) where
 
 import Cirrus.Encode (encode)
-import Cirrus.Types (Template)
 import Control.Exception.Lens (catching_)
 import Control.Lens ((&), (?~), (.~))
 import Control.Monad (void)
@@ -13,26 +12,25 @@ import Data.Text (Text)
 import Network.AWS
 import Network.AWS.CloudFormation
 import System.IO (stdout)
+import qualified Cirrus.Types as C (Stack(..))
 
-type StackName = Text
+create :: C.Stack -> CreateStack
+create s = createStack (C.stackName s) & csTemplateBody ?~ templateBody s
 
-create :: StackName -> Template -> CreateStack
-create n t = createStack n & csTemplateBody ?~ templateBody t
+update :: C.Stack -> UpdateStack
+update s = updateStack (C.stackName s) & usTemplateBody ?~ templateBody s
 
-update :: StackName -> Template -> UpdateStack
-update n t = updateStack n & usTemplateBody ?~ templateBody t
-
-templateBody :: Template -> Text
-templateBody = decodeUtf8 . toStrict . encode
+templateBody :: C.Stack -> Text
+templateBody = decodeUtf8 . toStrict . encode . C.stackTemplate
 
 -- TODO return an Either?
-deploy :: StackName -> Template -> AWS ()
-deploy n t = catching_ _AlreadyExistsException (run create) (run update)
-  where run f = void . send $ f n t
+deploy :: C.Stack -> AWS ()
+deploy s = catching_ _AlreadyExistsException (run create) (run update)
+  where run f = void . send $ f s
 
-runDeploy :: StackName -> Template -> IO ()
-runDeploy n t = do
+runDeploy :: C.Stack -> IO ()
+runDeploy s = do
   env <- newEnv NorthVirginia Discover
   logger <- newLogger Debug stdout
 
-  runResourceT . runAWS (env & envLogger .~ logger) $ deploy n t
+  runResourceT . runAWS (env & envLogger .~ logger) $ deploy s

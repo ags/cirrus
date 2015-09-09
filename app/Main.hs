@@ -28,7 +28,7 @@ parseCmd f = do
 deployCmd :: String -> FilePath -> IO ()
 deployCmd n f = do
   yml <- BS.readFile f
-  either (fail . show) (runDeploy (pack n)) (decodeTemplate yml)
+  either (fail . show) (\t -> runDeploy $ Stack (pack n) t) (decodeTemplate yml)
 
 decodeTemplate :: BS.ByteString -> Either String Template
 decodeTemplate yml = fmap fromConfig (decode yml)
