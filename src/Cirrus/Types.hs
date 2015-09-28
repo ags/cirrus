@@ -69,11 +69,12 @@ instance FromJSON Config where
            <*> ((o .:  "subnets") >>= (.: "instance"))
   parseJSON _ = mzero
 
--- Port (newtype?)
+-- Port
 
 type Port = Int
 
 -- AMI
+-- An Amazon EC2 Amazon Machine Image ID.
 
 newtype AMI = AMI { unAMI :: Text } deriving (Eq, Show, ToJSON)
 
@@ -81,6 +82,8 @@ instance FromJSON AMI where
   parseJSON = AE.withText "AMI ID" (pure . AMI)
 
 -- Subnet
+-- Identifier for an Amazon EC2 subnet within a VPC.
+-- http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-subnet.html
 
 newtype Subnet = Subnet Text deriving (Eq, Show, ToJSON)
 
@@ -88,6 +91,8 @@ instance FromJSON Subnet where
   parseJSON = AE.withText "Subnet ID" (pure . Subnet)
 
 -- Health Check
+-- Amazon ELB health check configuration.
+-- http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-elb-health-check.html
 
 data HealthCheck = HealthCheck { hcHealthyThreshold :: Integer
                                , hcInterval :: Integer
@@ -115,6 +120,7 @@ instance ToJSON HealthCheck where
     ]
 
 -- User Data
+-- Amazon EC2 user data provided to EC2 instances.
 
 newtype UserData = UserData { unUserData :: [Text] } deriving (Eq, Show)
 
@@ -133,7 +139,9 @@ instance ToJSON UserData where
                  , toJSON . Ref $ "AWS::StackName"
                  ]
 
--- EC2 instance type, e.g. t2.micro.
+-- Instance Type
+-- Amazon EC2 instance type, e.g. t2.micro.
+-- http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html
 
 newtype InstanceType = InstanceType { unInstanceType :: EC2.InstanceType }
   deriving (Eq, FromText, Show)
@@ -148,6 +156,7 @@ defaultInstanceType :: InstanceType
 defaultInstanceType = InstanceType EC2.T2_Micro
 
 -- VPC
+-- Identifier for an Amazon EC2 VPC.
 
 newtype VPC = VPC { unVPC :: Text } deriving (Eq, Show, ToJSON)
 
@@ -162,7 +171,9 @@ data Protocol = HTTP | HTTPS | TCP | SSL
 instance FromJSON Protocol
 instance ToJSON Protocol
 
---- Listener
+-- Listener
+-- Configuration for a listener of an Amazon ELB.
+-- http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-elb-listener.html
 
 data Listener = Listener { lnrPort :: Port
                          , lnrProtocol :: Protocol
@@ -181,6 +192,7 @@ instance ToJSON Listener where
                     ]
 
 -- Capacity
+-- Configures Auto Scaling Group size.
 
 data Capacity = Capacity { capMin :: Integer
                          , capMax :: Integer
@@ -196,6 +208,7 @@ defaultCapacity :: Capacity
 defaultCapacity = Capacity { capMin = 1, capMax = 1 }
 
 -- Tag
+-- http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-tags.html
 
 data TagValue = TextTagValue Text
               | RefTagValue Ref
@@ -241,6 +254,8 @@ instance ToJSON GetAtt where
   toJSON ga = object [ "Fn::GetAtt" .= [ resourceName ga, attributeName ga ] ]
 
 -- Auto Scaling Group
+-- An Amazon EC2 Auto Scaling Group of EC2 instances.
+-- http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-group.html
 
 data AutoScalingGroup = AutoScalingGroup { asgMaxSize :: Integer
                                          , asgMinSize :: Integer
@@ -284,7 +299,9 @@ instance FromConfig AutoScalingGroup where
                                   }
 
 
--- Ingress Rule
+-- IngressRule
+-- An Amazon EC2 security group ingress rule.
+-- http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group-rule.html
 
 data IngressRule = IngressRule { irIpProtocol :: Text
                                , irFromPort :: Port
@@ -300,6 +317,8 @@ instance ToJSON IngressRule where
                      ]
 
 -- SecurityGroup
+-- An Amazon EC2 Security Group.
+-- http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html
 
 data SecurityGroup = SecurityGroup { sgVPC :: VPC
                                    , sgIngress :: [IngressRule]
@@ -328,6 +347,8 @@ ingressRule l = IngressRule { irIpProtocol = "tcp"
                             }
 
 -- Elastic Load Balancer
+-- An Amazon Elastic Load Balancer.
+-- http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-elb.html
 
 data ElasticLoadBalancer = ElasticLoadBalancer { elbHealthCheck :: HealthCheck
                                                , elbSubnets :: [Subnet]
@@ -358,6 +379,8 @@ instance FromConfig ElasticLoadBalancer where
                                      }
 
 -- Launch Configuration
+-- Used by an Auto Scaling group to configure EC2 instances in the group.
+-- http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-launchconfig.html
 
 data LaunchConfiguration = LaunchConfiguration { lcAMI :: AMI
                                                , lcInstanceType :: InstanceType
